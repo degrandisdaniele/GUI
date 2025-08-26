@@ -1,0 +1,116 @@
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { FileText, Code, Info } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function ReferencePanel({ selectedAVD, caseStudy }) {
+  const formatValue = (value) => {
+    if (typeof value === 'number') {
+      return value.toFixed(3);
+    }
+    return String(value || '-');
+  };
+
+  return (
+    <Card className="glass-card elegant-shadow h-fit sticky top-6">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-slate-900">
+          <FileText className="w-5 h-5 text-blue-600" />
+          Dati di Riferimento
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {selectedAVD ? (
+          <motion.div
+            key={selectedAVD.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            {/* AVD Info */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                {selectedAVD.name}
+              </h4>
+              <p className="text-sm text-blue-700">
+                {selectedAVD.description || "Elemento AVD selezionato per l'analisi"}
+              </p>
+            </div>
+
+            {/* Values Section */}
+            <div className="space-y-3">
+              <h5 className="font-medium text-slate-900 text-sm">Parametri Principali</h5>
+              <div className="space-y-2">
+                {Object.entries(selectedAVD.values || {}).map(([key, value]) => (
+                  <div key={key} className="flex justify-between items-center py-2 px-3 bg-slate-50 rounded-lg">
+                    <span className="text-sm font-medium text-slate-700">{String(key)}</span>
+                    <Badge variant="secondary" className="font-mono">
+                      {formatValue(value)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Codes Section */}
+            {selectedAVD.codes && (
+              <div className="space-y-3">
+                <h5 className="font-medium text-slate-900 text-sm flex items-center gap-2">
+                  <Code className="w-4 h-4" />
+                  Codici di Riferimento
+                </h5>
+                <div className="space-y-2">
+                  {Object.entries(selectedAVD.codes).map(([key, code]) => (
+                    <div key={key} className="p-3 bg-slate-50 rounded-lg">
+                      <p className="text-xs font-medium text-slate-600 mb-1">{String(key)}</p>
+                      <code className="text-sm font-mono text-slate-800 bg-white px-2 py-1 rounded border">
+                        {String(code)}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Info */}
+            {selectedAVD.metadata && (
+              <div className="space-y-3">
+                <h5 className="font-medium text-slate-900 text-sm">Informazioni Aggiuntive</h5>
+                <div className="text-sm text-slate-600 space-y-1">
+                  {Object.entries(selectedAVD.metadata).map(([key, info]) => (
+                    <p key={key}>
+                      <strong>{String(key)}:</strong> {String(info)}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <div className="text-center py-8">
+            <FileText className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500">
+              Seleziona un elemento AVD per visualizzare i dati di riferimento
+            </p>
+          </div>
+        )}
+
+        {/* Case Study Info */}
+        {caseStudy && (
+          <div className="pt-6 border-t border-slate-200">
+            <h5 className="font-medium text-slate-900 text-sm mb-3">Informazioni Caso</h5>
+            <div className="space-y-2 text-sm">
+              <p><strong>Tipo:</strong> <Badge variant="outline">{caseStudy.type}</Badge></p>
+              <p><strong>Creato:</strong> {new Date(caseStudy.created_date).toLocaleDateString('it-IT')}</p>
+              <p><strong>Elementi AVD:</strong> {caseStudy.avd_data?.length || 0}</p>
+              <p><strong>Fasi Processo:</strong> {caseStudy.process_steps?.length || 0}</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

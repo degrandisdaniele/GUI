@@ -1,0 +1,129 @@
+import React, { useState, useEffect } from "react";
+import { CaseStudy } from "@/entities/CaseStudy";
+import { createPageUrl } from "@/utils";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Settings, Zap, Layers, ArrowRight, BarChart } from "lucide-react";
+
+const iconMap = {
+  settings: Settings,
+  zap: Zap,
+  layers: Layers
+};
+
+export default function SelezionePage() {
+  const navigate = useNavigate();
+  const [caseStudies, setCaseStudies] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadCaseStudies();
+  }, []);
+
+  const loadCaseStudies = async () => {
+    try {
+      const studies = await CaseStudy.list();
+      setCaseStudies(studies);
+    } catch (error) {
+      console.error("Errore nel caricamento dei casi:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStudySelect = (study) => {
+    navigate(createPageUrl(`Analisi?case=${study.id}`));
+  };
+
+  return (
+    <div className="min-h-screen px-6 py-12">
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
+        >
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+            <BarChart className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+            Seleziona un'Area di
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Analisi</span>
+          </h1>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Scegli il tipo di caso di studio su cui desideri lavorare. 
+            Ogni area offre strumenti specializzati per l'analisi e la validazione.
+          </p>
+        </motion.div>
+
+        {/* Case Studies Grid */}
+        {isLoading ? (
+          <div className="grid md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="glass-card elegant-shadow rounded-2xl p-8 animate-pulse">
+                <div className="w-16 h-16 bg-slate-200 rounded-xl mb-6"></div>
+                <div className="h-6 bg-slate-200 rounded mb-4"></div>
+                <div className="h-20 bg-slate-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8">
+            {caseStudies.map((study, index) => {
+              const IconComponent = iconMap[study.icon] || Settings;
+              return (
+                <motion.div
+                  key={study.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -8, scale: 1.02 }}
+                  className="group cursor-pointer"
+                  onClick={() => handleStudySelect(study)}
+                >
+                  <div className="glass-card elegant-shadow rounded-2xl p-8 h-full transition-all duration-300 group-hover:shadow-2xl border border-slate-200/60 group-hover:border-blue-200">
+                    <div className={`w-16 h-16 rounded-xl mb-6 flex items-center justify-center bg-gradient-to-r ${study.color || 'from-blue-500 to-blue-600'}`}>
+                      <IconComponent className="w-8 h-8 text-white" />
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold text-slate-900 mb-4 group-hover:text-blue-700 transition-colors">
+                      {study.name}
+                    </h3>
+                    
+                    <p className="text-slate-600 mb-6 leading-relaxed">
+                      {study.description}
+                    </p>
+                    
+                    <div className="flex items-center text-blue-600 font-semibold group-hover:text-blue-700 transition-colors">
+                      <span>Inizia Analisi</span>
+                      <ArrowRight className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {caseStudies.length === 0 && !isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <div className="w-24 h-24 bg-slate-100 rounded-full mx-auto mb-6 flex items-center justify-center">
+              <BarChart className="w-12 h-12 text-slate-400" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-4">Nessun Caso di Studio Disponibile</h3>
+            <p className="text-slate-600 max-w-md mx-auto">
+              I casi di studio verranno caricati automaticamente. 
+              Ricarica la pagina per verificare la disponibilità.
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}

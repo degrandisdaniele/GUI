@@ -1,0 +1,165 @@
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from "recharts";
+import { BarChart3, TrendingUp, Activity } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function DataVisualization({ avdData, selectedAVD, onAVDSelect }) {
+  const renderChart = () => {
+    if (!selectedAVD || !selectedAVD.chart_data) {
+      return (
+        <div className="h-96 flex items-center justify-center text-slate-500">
+          <div className="text-center">
+            <BarChart3 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+            <p>Seleziona un elemento AVD per visualizzare i dati</p>
+          </div>
+        </div>
+      );
+    }
+
+    const data = selectedAVD.chart_data;
+    const chartType = selectedAVD.chart_type || 'line';
+
+    switch (chartType) {
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <AreaChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="x" stroke="#64748b" />
+              <YAxis stroke="#64748b" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                  border: 'none', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="y" 
+                stroke="#2563eb" 
+                fill="url(#colorGradient)" 
+                strokeWidth={2}
+              />
+              <defs>
+                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.05}/>
+                </linearGradient>
+              </defs>
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="x" stroke="#64748b" />
+              <YAxis stroke="#64748b" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                  border: 'none', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+              <Bar dataKey="y" fill="#059669" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return (
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="x" stroke="#64748b" />
+              <YAxis stroke="#64748b" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                  border: 'none', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+              <Line 
+                type="monotone" 
+                dataKey="y" 
+                stroke="#2563eb" 
+                strokeWidth={3}
+                dot={{ fill: '#2563eb', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: '#1d4ed8' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+    }
+  };
+
+  const formatDisplayValue = (value) => {
+    if (typeof value === 'number') {
+      return value.toFixed(2);
+    }
+    return String(value || '-');
+  };
+
+  return (
+    <Card className="glass-card elegant-shadow h-fit">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-slate-900">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            Visualizzazione Dati
+          </CardTitle>
+          <Select value={selectedAVD?.id || ""} onValueChange={(value) => {
+            const avd = avdData.find(item => item.id === value);
+            onAVDSelect(avd);
+          }}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Seleziona AVD..." />
+            </SelectTrigger>
+            <SelectContent>
+              {avdData?.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <motion.div
+          key={selectedAVD?.id}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-xl p-4 border border-slate-200"
+        >
+          {renderChart()}
+        </motion.div>
+
+        {selectedAVD && selectedAVD.values && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"
+          >
+            {Object.entries(selectedAVD.values).slice(0, 4).map(([key, value]) => (
+              <div key={key} className="bg-slate-50 rounded-lg p-3 text-center">
+                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium">{String(key)}</p>
+                <p className="text-lg font-bold text-slate-900 mt-1">{formatDisplayValue(value)}</p>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
